@@ -84,7 +84,7 @@ namespace TwitDestructor
                         }
                         catch
                         {
-                            Console.WriteLine("Error deleting tweet(id=" + tid);
+                            Console.WriteLine("Error deleting tweet(id=" + tid + ")");
                            n_err.Add(tid);
                         }
                     }
