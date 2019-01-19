@@ -1,8 +1,6 @@
-﻿using System;
+using System;
 using System.IO;
-using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-using System.Text.RegularExpressions;
 using System.Collections.Generic;
 
 namespace TwitDestructor
@@ -46,17 +44,23 @@ namespace TwitDestructor
                 dynamic tweets = JObject.Parse(contents);
 
                 Console.WriteLine("{0} tweets loaded!", tweets.data.Count);
+                Console.WriteLine("Start deleting...");
                 List<String> d_err = new List<string>();
 
-                foreach (dynamic t in tweets)
+                int count = 0;
+                foreach (dynamic t in tweets.data)
                 {
                     try
                     {
                         twc.remove_tweet(t.id_str.ToString());
+
+                        count++;
+                        if (count % 50 == 0)
+                            Console.WriteLine("{0} tweets deleted", count);
                     }
                     catch
                     {
-                        Console.WriteLine("Error deleting tweet(id=" + t.id_str.ToString());
+                        Console.WriteLine("Error deleting tweet(id=" + t.id_str.ToString() + ")");
                         d_err.Add(t.id_str.ToString());
                     }
                 }
@@ -80,7 +84,7 @@ namespace TwitDestructor
                         }
                         catch
                         {
-                            Console.WriteLine("Error deleting tweet(id=" + tid);
+                            Console.WriteLine("Error deleting tweet(id=" + tid + ")");
                            n_err.Add(tid);
                         }
                     }
