@@ -1,17 +1,39 @@
-using System;
+﻿using System;
 using System.IO;
+using System.Threading;
 using Newtonsoft.Json.Linq;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace TwitDestructor
 {
     class Program
     {
+        #region API Key/Secret Config
         const string API_KEY = "";
         const string API_SECRET = "";
+        #endregion  
+
+        private static int th_max = 4;
+        private static Work[] works;
+        private static Thread[] threads;
+
 
         static void Main(string[] args)
         {
+            if (args.Length > 1 || (args.Length == 1 && int.TryParse(args[0], out th_max)))
+            {
+                Console.Write("Wrong arguments...");
+                th_max = 4;
+            }
+            else if(args.Length == 0)
+                th_max = 4;
+            else
+                th_max = int.Parse(args[0]);
+
+            Console.WriteLine(" program will be run in maximum {0} threads", th_max);
+
+
             try
             {
                 TwitterClient twc = new TwitterClient(API_KEY, API_SECRET);
@@ -27,8 +49,7 @@ namespace TwitDestructor
                 twc.authenticate(pin);
                 
 
-                dynamic cred = JObject.Parse(twc.oauth_send("https://api.twitter.com/1.1/account/verify_credentials.json", "GET"));
-                Console.WriteLine("Welcome, @" + cred.screen_name.ToString() + "!");
+                Console.WriteLine("Welcome, @" + twc.get_user_id() + "!");
                 Console.WriteLine("Type the path of 'tweet.js' or drag&drop it!");
                 Console.Write("> ");
                 string archive_path = Console.ReadLine();
@@ -47,53 +68,80 @@ namespace TwitDestructor
                 Console.WriteLine("Start deleting...");
                 List<String> d_err = new List<string>();
 
-                int count = 0;
+                //parse data into list<string>
+                List<string> raw_tweets = new List<string>();
+
+
                 foreach (dynamic t in tweets.data)
-                {
-                    try
-                    {
-                        twc.remove_tweet(t.id_str.ToString());
+                    raw_tweets.Add(t.id_str.Value);
 
-                        count++;
-                        if (count % 50 == 0)
-                            Console.WriteLine("{0} tweets deleted", count);
-                    }
-                    catch
-                    {
-                        Console.WriteLine("Error deleting tweet(id=" + t.id_str.ToString() + ")");
-                        d_err.Add(t.id_str.ToString());
-                    }
+                if (th_max > (raw_tweets.Count / 500))
+                    th_max = raw_tweets.Count / 500;
+
+                Console.WriteLine("Deletion will be run in {0} threads", th_max);
+
+                works = new Work[th_max];
+                threads = new Thread[th_max];
+                for (int i=0; i < th_max; i++)
+                {
+                    works[i] = new Work(i + 1, twc, raw_tweets.Select((e, idx) => e).Where((e, idx) => idx % th_max == i).ToList());
+                    threads[i] = new Thread(new ThreadStart(works[i].delete_tweets));
                 }
 
-                while(d_err.Count > 0)
+                foreach (Thread th in threads)
+                    th.Start();
+
+                while(true)
                 {
-                    
-                    Console.Write("There were {0} errors, retry? (y/n) > ");
-                    string answer = Console.ReadLine();
-                    if (answer.ToLower() == "n")
-                        break;
-                    else if (answer.ToLower() != "y")
+                    bool done = true;
+                    foreach (Work w in works)
+                        done &= w.Done;
+                    if (!done)
                         continue;
-
-                    List<String> n_err = new List<string>();
-                    foreach(string tid in d_err)
-                    {
-                        try
-                        {
-                            twc.remove_tweet(tid);
-                        }
-                        catch
-                        {
-                            Console.WriteLine("Error deleting tweet(id=" + tid + ")");
-                           n_err.Add(tid);
-                        }
-                    }
-
-                    d_err = n_err;
+                    break;
                 }
 
-                Console.WriteLine("Done!");
-                Console.ReadLine();
+                foreach (Thread th in threads)
+                    th.Abort();
+
+                while(true)
+                {
+                    int errs = 0;
+                    for (int i = 0; i < th_max; i++)
+                        errs += works[i].Que_count;
+
+                    Console.Write("Deletion is done with totally {0} errors, retry?(y/n) > ", errs);
+                    string x = Console.ReadLine();
+                    if (x == "n")
+                        break;
+                    else if (x != "y")
+                        Console.WriteLine("Answer with 'y' or 'n'!");
+                    else
+                    {
+                        for (int i = 0; i < th_max; i++)
+                        {
+                            threads[i] = new Thread(new ThreadStart(works[i].retry_error));
+                            threads[i].Start();
+                        }
+
+                        while (true)
+                        {
+                            bool done = true;
+                            foreach (Work w in works)
+                                done &= w.Done;
+                            if (!done)
+                                continue;
+                            break;
+                        }
+                        foreach (Thread th in threads)
+                            th.Abort();
+                    }
+
+                }
+                    
+                
+
+
             }
             catch(Exception e)
             {
