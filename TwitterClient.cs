@@ -1,11 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 using System.Net;
 using System.Security.Cryptography;
 using System.IO;
+
+using Newtonsoft.Json.Linq;
 
 namespace TwitDestructor
 {
@@ -17,14 +17,50 @@ namespace TwitDestructor
         private string token = "";
         private string token_secret ="";
 
-
         private string ver = "1.0";
         private string sign_method = "HMAC-SHA1";
+
+        public string API_KEY
+        {
+            get { return api_key; }
+        }
+        public string API_SECRET
+        {
+            get { return api_secret; }
+        }
+
+        public string AUTH_TOKEN
+        {
+            get { return token; }
+        }
+        public string AUTH_SECRET
+        {
+            get { return token_secret; }
+        }
+
+        public string OAUTH_VER
+        {
+            get { return ver; }
+            set { ver = value; }
+        }
+        public string OAUTH_SIGN_METHOD
+        {
+            get { return sign_method; }
+            set { sign_method = value; }
+        }
 
         public TwitterClient(string consumer_key, string consumer_secret)
         {
             api_key = consumer_key;
             api_secret = consumer_secret;
+        }
+
+        public TwitterClient(TwitterClient twc)
+        {
+            api_key = twc.API_KEY;
+            api_secret = twc.API_SECRET;
+            token = twc.AUTH_TOKEN;
+            token_secret = twc.AUTH_SECRET;
         }
 
         public void set_dev_token(string dtoken, string dsecret)
@@ -56,7 +92,7 @@ namespace TwitDestructor
                 throw new Exception("Failed in deleting tweet!");
             }
         }
-        
+
         public void request_token()
         {
             try
@@ -98,8 +134,14 @@ namespace TwitDestructor
                 throw new Exception("Failed in authenticate!");
             }
         }
+
+        public string get_user_id()
+        {
+            dynamic cred = JObject.Parse(oauth_send("https://api.twitter.com/1.1/account/verify_credentials.json", "GET"));
+            return cred.screen_name.Value; ;
+        }
            
-        public string oauth_send(string target, string method="POST", Dictionary<string, string> user_data = null)
+        private string oauth_send(string target, string method="POST", Dictionary<string, string> user_data = null)
         {
             string send_string = "";
 
