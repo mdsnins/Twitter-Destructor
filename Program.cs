@@ -71,6 +71,7 @@ namespace TwitDestructor
                 dynamic tweets = JObject.Parse(contents);
 
                 Console.WriteLine("{0} tweets loaded!", tweets.data.Count);
+
                 //parse data into list<string>
                 List<string> raw_tweets = new List<string>();
 
