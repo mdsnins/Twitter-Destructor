@@ -1,0 +1,12 @@
+<!-- both (# of RT) >= 3 and (# of Like) >= 3 will be safe -->
+<Filter operation="and">
+	<Filter>
+		<Type>retweet</Type>
+		<Value>3</Value>
+	</Filter>
+	
+	<Filter>
+		<Type>like</Type>
+		<Value>3</Value>
+	</Filter>
+</Filter>

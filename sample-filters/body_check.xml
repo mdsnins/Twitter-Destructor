@@ -1,0 +1,17 @@
+<!-- which contains "twitter", "트위터", or "7w1773r" in body will be safe -->
+<Filter operation="or">
+	<Filter>
+		<Type>body</Type>
+		<Value>twitter</Value>
+	</Filter>
+	
+	<Filter>
+		<Type>body</Type>
+		<Value>트위터</Value>
+	</Filter>
+	
+	<Filter>
+		<Type>body</Type>
+		<Value>7w1773r</Value>
+	</Filter>
+</Filter>

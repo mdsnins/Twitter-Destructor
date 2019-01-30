@@ -1,0 +1,12 @@
+<!-- either (# of RT) >= 1 or (# of Like) >= 1 will be safe -->
+<Filter operation="or">
+	<Filter>
+		<Type>retweet</Type>
+		<Value>1</Value>
+	</Filter>
+	
+	<Filter>
+		<Type>like</Type>
+		<Value>1</Value>
+	</Filter>
+</Filter>
