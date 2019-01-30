@@ -17,14 +17,23 @@ namespace TwitDestructor
         private static int th_max = 4;
         private static Work[] works;
         private static Thread[] threads;
+<<<<<<< HEAD
         private static TweetFilter ft;
+=======
+>>>>>>> b0f5ce61d871140bb63c43541f76a3d2ec7e0f0e
 
 
         static void Main(string[] args)
         {
+<<<<<<< HEAD
             if (args.Length > 1 || (args.Length == 1 && !int.TryParse(args[0], out th_max)))
             {
                 Console.Write("Wrong arguments... ");
+=======
+            if (args.Length > 1 || (args.Length == 1 && int.TryParse(args[0], out th_max)))
+            {
+                Console.Write("Wrong arguments...");
+>>>>>>> b0f5ce61d871140bb63c43541f76a3d2ec7e0f0e
                 th_max = 4;
             }
             else if(args.Length == 0)
@@ -32,11 +41,16 @@ namespace TwitDestructor
             else
                 th_max = int.Parse(args[0]);
 
+<<<<<<< HEAD
             Console.WriteLine("Program will be run in maximum {0} threads", th_max);
 
             ft = new TweetFilter("filter.xml");
             if (ft.Load)
                 Console.WriteLine("Tweet filter is loaded!");
+=======
+            Console.WriteLine(" program will be run in maximum {0} threads", th_max);
+
+>>>>>>> b0f5ce61d871140bb63c43541f76a3d2ec7e0f0e
 
             try
             {
@@ -56,6 +70,10 @@ namespace TwitDestructor
                 Console.WriteLine("Welcome, @" + twc.get_user_id() + "!");
                 
 
+<<<<<<< HEAD
+=======
+                Console.WriteLine("Welcome, @" + twc.get_user_id() + "!");
+>>>>>>> b0f5ce61d871140bb63c43541f76a3d2ec7e0f0e
                 Console.WriteLine("Type the path of 'tweet.js' or drag&drop it!");
                 Console.Write("> ");
                 string archive_path = Console.ReadLine();
@@ -71,6 +89,7 @@ namespace TwitDestructor
                 dynamic tweets = JObject.Parse(contents);
 
                 Console.WriteLine("{0} tweets loaded!", tweets.data.Count);
+<<<<<<< HEAD
 
                 //parse data into list<string>
                 List<string> raw_tweets = new List<string>();
@@ -83,6 +102,18 @@ namespace TwitDestructor
                 Console.WriteLine("Start deleting...");
                 List<String> d_err = new List<string>();
 
+=======
+                Console.WriteLine("Start deleting...");
+                List<String> d_err = new List<string>();
+
+                //parse data into list<string>
+                List<string> raw_tweets = new List<string>();
+
+
+                foreach (dynamic t in tweets.data)
+                    raw_tweets.Add(t.id_str.Value);
+
+>>>>>>> b0f5ce61d871140bb63c43541f76a3d2ec7e0f0e
                 if (th_max > (raw_tweets.Count / 500))
                     th_max = raw_tweets.Count / 500;
 
@@ -144,7 +175,16 @@ namespace TwitDestructor
                         foreach (Thread th in threads)
                             th.Abort();
                     }
+<<<<<<< HEAD
                 }
+=======
+
+                }
+                    
+                
+
+
+>>>>>>> b0f5ce61d871140bb63c43541f76a3d2ec7e0f0e
             }
             catch(Exception e)
             {
