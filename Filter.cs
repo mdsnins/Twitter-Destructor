@@ -196,10 +196,13 @@ namespace TwitDestructor
                 {
                     case FilterOp.OP_AND:
                         return m_filter.Item1.check(tweet) & m_filter.Item2.check(tweet);
+
                     case FilterOp.OP_OR:
                         return m_filter.Item1.check(tweet) | m_filter.Item2.check(tweet);
+
                     case FilterOp.OP_XOR:
                         return m_filter.Item1.check(tweet) ^ m_filter.Item2.check(tweet);
+
                     default: return false;
                 }
             }
