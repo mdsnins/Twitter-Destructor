@@ -17,13 +17,14 @@ namespace TwitDestructor
         private static int th_max = 4;
         private static Work[] works;
         private static Thread[] threads;
+        private static TweetFilter ft;
 
 
         static void Main(string[] args)
         {
-            if (args.Length > 1 || (args.Length == 1 && int.TryParse(args[0], out th_max)))
+            if (args.Length > 1 || (args.Length == 1 && !int.TryParse(args[0], out th_max)))
             {
-                Console.Write("Wrong arguments...");
+                Console.Write("Wrong arguments... ");
                 th_max = 4;
             }
             else if(args.Length == 0)
@@ -31,13 +32,17 @@ namespace TwitDestructor
             else
                 th_max = int.Parse(args[0]);
 
-            Console.WriteLine(" program will be run in maximum {0} threads", th_max);
+            Console.WriteLine("Program will be run in maximum {0} threads", th_max);
 
+            ft = new TweetFilter("filter.xml");
+            if (ft.Load)
+                Console.WriteLine("Tweet filter is loaded!");
 
             try
             {
                 TwitterClient twc = new TwitterClient(API_KEY, API_SECRET);
                 
+               
                 Console.WriteLine("Requesting Twitter Tokens..");
                 twc.request_token();
 
@@ -47,9 +52,10 @@ namespace TwitDestructor
                 string pin = Console.ReadLine();
                 Console.WriteLine("Verifying pin inputs..");
                 twc.authenticate(pin);
-                
 
                 Console.WriteLine("Welcome, @" + twc.get_user_id() + "!");
+                
+
                 Console.WriteLine("Type the path of 'tweet.js' or drag&drop it!");
                 Console.Write("> ");
                 string archive_path = Console.ReadLine();
@@ -65,15 +71,16 @@ namespace TwitDestructor
                 dynamic tweets = JObject.Parse(contents);
 
                 Console.WriteLine("{0} tweets loaded!", tweets.data.Count);
-                Console.WriteLine("Start deleting...");
-                List<String> d_err = new List<string>();
-
                 //parse data into list<string>
                 List<string> raw_tweets = new List<string>();
 
-
-                foreach (dynamic t in tweets.data)
+                //Filter Added
+                foreach (dynamic t in ft.apply(tweets.data))
                     raw_tweets.Add(t.id_str.Value);
+
+                Console.WriteLine("{0} tweets are safe! Only {1} tweets will be deleted", tweets.data.Count - raw_tweets.Count, raw_tweets.Count);
+                Console.WriteLine("Start deleting...");
+                List<String> d_err = new List<string>();
 
                 if (th_max > (raw_tweets.Count / 500))
                     th_max = raw_tweets.Count / 500;
@@ -136,12 +143,7 @@ namespace TwitDestructor
                         foreach (Thread th in threads)
                             th.Abort();
                     }
-
                 }
-                    
-                
-
-
             }
             catch(Exception e)
             {
